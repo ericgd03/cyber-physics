@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import rospy
+from std_msgs.msg import String, Bool
 from geometry_msgs.msg import Pose2D
 import math
 
@@ -10,46 +11,46 @@ class waypoints_node:
         
         rospy.init_node("waypoints_node", anonymous=True)
         self.waypoints_pub = rospy.Publisher("/waypoint", Pose2D, queue_size=10)
-        self.odometry_sub = rospy.Subscriber('/odometry_b1', Pose2D, self.odom_callback)
-        rospy.Rate(10)
+        #self.odometry_sub = rospy.Subscriber('/odometry_b1', Pose2D, self.odom_callback)
+        self.reset_origin_sub = rospy.Subscriber("/reset_origin", Bool, self.reset_origin_callback)
+        self.done_trajectory_pub = rospy.Publisher("/done_trajectory", Bool, queue_size=10)
+        self.rate = rospy.Rate(10)
 
         self.waypoints = [
             # X: 1m = 0.3 -- Y: 1m = 0.1
             #Pose2D(1.0, 0.1, 0.0)
-
-            Pose2D(0.2, 0.1, 0.0),
-            Pose2D(0.2, 0.2, 0.0)
-
-            #Pose2D(0.3, 0.3, 0.0)
-            #Pose2D(6.0, -3.0, 0.0)
-            #Pose2D(0.0, 0.0, 0.0)          
+            #1.03
+            Pose2D(1.05, 0.17, 0.0),
+            Pose2D(0.35, 0.0, 0.0),
+            Pose2D(0.0, 0.5, 0.0),
+            Pose2D(0.0, 0.5, 0.0),
+            Pose2D(0.01, 0.01, 0.0),
         ]
         self.current_waypoint_index = 0
         self.threshold_distance = 0.05
+        self.next_waypoint = False
+    
+    def reset_origin_callback(self, msg):
 
-    def odom_callback(self, msg):
+        self.current_waypoint_index += 1
 
-        x = msg.x
-        y = msg.y
+    def send_waypoint(self):
+
+        if self.current_waypoint_index >= len(self.waypoints):
+
+            self.current_waypoint_index = 0
+            self.done_trajectory_pub.publish(True)
+            #rospy.signal_shutdown("Trajectory completed")
+            #return
 
         waypoint = self.waypoints[self.current_waypoint_index]
         self.waypoints_pub.publish(waypoint)
 
-        distance_to_waypoint = math.sqrt((waypoint.x - x)**2 + (waypoint.y - y)**2)
-
-        if distance_to_waypoint < self.threshold_distance:
-
-            self.current_waypoint_index += 1
-
-            if self.current_waypoint_index >= len(self.waypoints):
-
-                #self.current_waypoint_index = 0
-                rospy.signal_shutdown("Trajectory completed")
-                return
-
 if __name__ == "__main__":
     try:
         w_n = waypoints_node()
-        rospy.spin()
+        while not rospy.is_shutdown():
+            w_n.send_waypoint()
+            w_n.rate.sleep()
     except rospy.ROSInterruptException:
         pass
