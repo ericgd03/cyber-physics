@@ -18,16 +18,15 @@ class waypoints_node:
 
         self.waypoints = [
             # X: 1m = 0.3 -- Y: 1m = 0.1
-            #Pose2D(1.0, 0.1, 0.0)
-            #1.03
-            Pose2D(1.05, 0.17, 0.0),
-            Pose2D(0.35, 0.0, 0.0),
-            Pose2D(0.0, 0.5, 0.0),
-            Pose2D(0.0, 0.5, 0.0),
+            #1.02
+            Pose2D(1.0, 0.1, 0.0),
+            Pose2D(0.37, 0.0, 0.0),
+            Pose2D(0.0, 0.4, 0.0),
+            Pose2D(0.0, 0.20, 0.0),
             Pose2D(0.01, 0.01, 0.0),
         ]
         self.current_waypoint_index = 0
-        self.threshold_distance = 0.05
+        self.threshold_distance = 0.01
         self.next_waypoint = False
     
     def reset_origin_callback(self, msg):

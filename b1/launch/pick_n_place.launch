@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<launch> 
+    <node pkg="b1" type="odometry_node.py" name="odometry" output="screen"/>
+    <node pkg="b1" type="waypoints_node.py" name="waypoints" output="screen"/>
+    <node pkg="b1" type="trajectory_recorder.py" name="recorder" output="screen"/>
+    <node pkg="b1" type="controller_node.py" name="controller" output="screen"/>
+</launch>
