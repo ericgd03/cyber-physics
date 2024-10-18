@@ -27,7 +27,7 @@ class controller_node:
 
         self.right_ultrasonic_sub = rospy.Subscriber("/DistanciaDerecha", Float32, self.right_ultrasonic_callback)
         self.left_ultrasonic_sub = rospy.Subscriber("/DistanciaIzquierda", Float32, self.left_ultrasonic_callback)
-        self.center_ultrasonic_sub = rospy.Subscriber("/DistanciaCentro", Float32, self.center_ultrasonic_callback)
+        self.center_ultrasonic_sub = rospy.Subscriber("/DistanciaMedio", Float32, self.center_ultrasonic_callback)
 
         self.omron_sub = rospy.Subscriber("/omron_status", Bool, self.omron_status_callback)
         self.place_b1_pub = rospy.Publisher("/place_b1", Bool, queue_size=10)
@@ -49,13 +49,13 @@ class controller_node:
         self.angular_vel = 0.0
 
         self.stop_vel = 0.0
-        self.forward_vel = 0.53
-        self.turn_vel = 0.2
+        self.forward_vel = 0.15
+        self.turn_vel = 0.15
         self.turn_degrees = 88
         self.threshold_distance = 0.01
 
         #self.kp_linear = 1
-        self.kp_angular = 0.2
+        self.kp_angular = 0.1
 
         self.current_theta = 0
         self.trajectory_state = 'OMRON_WAIT'
@@ -64,7 +64,9 @@ class controller_node:
         self.done_moving_xarm = False
         self.xarm_routine = 1
 
-        self.obstacle_detected = False
+        self.right_obstacle_detection = False
+        self.left_obstacle_detection = False
+        self.center_obstacle_detection = False
 
         self.omron_confirmation = False
 
@@ -97,23 +99,30 @@ class controller_node:
 
     def right_ultrasonic_callback(self, msg):
 
-        if (msg.data <= 15.0):
-            self.obstacle_detected = True
+        if (msg.data <= 10.0):
+            self.right_obstacle_detection = True
+        else: 
+            self.right_obstacle_detection = False
     
     def left_ultrasonic_callback(self, msg):
 
-        if (msg.data <= 15.0):
-            self.obstacle_detected = True
+        if (msg.data <= 10.0):
+            self.left_obstacle_detection = True
+        else: 
+            self.left_obstacle_detection = False
     
     def center_ultrasonic_callback(self, msg):
 
-        if (msg.data <= 15.0):
-            self.obstacle_detected = True
+        if (msg.data <= 10.0):
+            self.center_obstacle_detection = True
+        else: 
+            self.center_obstacle_detection = False
 
     def omron_status_callback(self, msg):
 
         #print("Omron confirmation received")
         self.omron_confirmation = msg.data
+        print("Omron message status: ", self.omron_confirmation)
 
     def control_law(self):
         
@@ -128,148 +137,165 @@ class controller_node:
         #    self.linear_vel = 0.2
         #    self.angular_vel = self.kp_angular * self.normalize_angle(self.theta - angle_error)
 
-        if (self.trajectory_state == "OMRON_WAIT"):
+        if (self.right_obstacle_detection or self.left_obstacle_detection or self.center_obstacle_detection):
 
-            print("Waiting for omron confirmation")
-
+            print("STOPPING, OBSTACLE DETECTED")
             self.linear_vel = self.stop_vel
             self.angular_vel = self.stop_vel
-
-            if (self.omron_confirmation == True):
-
-                self.trajectory_state = ""
-
-        elif (self.trajectory_state == ''):
-
-            self.linear_vel = self.stop_vel
-            self.angular_vel = self.stop_vel
-
-            if (self.xarm_routine == 2):
-
-                print("PIECE PLACED SUCCESFULLY")
-                self.place_b1_pub.publish(True)
-
-            if (self.xarm_routine > 3):
-                self.xarm_routine = 1
-                self.trajectory_state = "OMRON_WAIT"
-
-            if (self.done_trajectory == False):
-                self.trajectory_state = 'MOVE_X'
-            else:
-                pass#self.trajectory_state = "RETURN_TO_ORIGIN"
-
-        elif (self.trajectory_state == 'MOVE_X'):
-
-            x_error = (self.x_goal - self.x)
-            print("Error X:", x_error)
-
-            if (x_error <= self.threshold_distance):
-                self.linear_vel = self.stop_vel
-                self.current_theta = self.theta
-                self.trajectory_state = 'TURN_TO_Y'
-            else:
-                self.linear_vel = self.forward_vel
-
-        elif (self.trajectory_state == 'TURN_TO_Y'):
-
-            orientation = self.y_goal - self.y
-            angle_change = self.theta - self.current_theta
-            angle = int(angle_change)
-            print("Angle error: ", angle)
-
-            if (orientation == 0):
-                self.angular_vel = self.stop_vel
-                self.trajectory_state = 'MOVE_Y'
-            elif (orientation > 0):
-                self.angular_vel = self.turn_vel
-                # Menos 5 para compensar que gira un poco mas
-                if (angle_change >= self.turn_degrees):
-                    self.angular_vel = self.stop_vel
-                    self.trajectory_state = 'MOVE_Y'
-            elif (orientation < 0):
-                self.angular_vel = -self.turn_vel
-                if (angle_change <= -self.turn_degrees):
-                    self.angular_vel = self.stop_vel
-                    self.trajectory_state = 'MOVE_Y'
-
-        elif (self.trajectory_state == 'MOVE_Y'):
-
-            y_error = self.y_goal - self.y
-            print("Error Y:", y_error)
-
-            if (y_error <= self.threshold_distance):
-                self.linear_vel = self.stop_vel
-                #self.current_theta = self.theta
-                self.reset_origin_pub.publish(True)
-                if (self.xarm_routine >= 3):
-                    self.trajectory_state = ""
-                else:
-                    self.xarm_pub.publish(self.xarm_routine)
-                    #self.trajectory_state = ''
-                    self.trajectory_state = 'MOVE_XARM'
-                #self.trajectory_state = 'TURN_TO_X'
-            else:
-                self.linear_vel = self.forward_vel
-
-        #elif (self.trajectory_state == 'TURN_TO_X'):
-
-            #orientation = self.y_goal - self.y
-            #angle_change = self.theta - self.current_theta
-            #angle = int(angle_change)
-            #print("Angle error: ", angle)
-
-            #if (orientation < 0):
-                #self.angular_vel = self.turn_vel
-                #if (angle_change >= self.turn_degrees):
-                    #self.angular_vel = self.stop_vel
-                    #self.reset_origin_pub.publish(True)
-                    #self.xarm_pub.publish(self.xarm_routine)
-                    #self.trajectory_state = ''
-            #if (orientation > 0):
-                #self.angular_vel = -self.turn_vel
-                #if (angle_change <= -self.turn_degrees):
-                    #self.angular_vel = self.stop_vel
-                    #self.reset_origin_pub.publish(True)
-                    #self.xarm_pub.publish(self.xarm_routine)
-                    #self.trajectory_state = ''
-
-            #orientation = self.y_goal - self.y
-            #if ((orientation) > 0):
-            #    self.angular_vel = -0.5
-            #elif (orientation < 0):
-            #    self.angular_vel = 0.5
-            #else:
-            #    self.trajectory_state = ''
-            #self.turn_counter += 1
-            #if self.turn_counter == 35:
-            #    self.angular_vel = 0.0
-            #    self.turn_counter = 0
-            #    self.trajectory_state = ''
-            #    # Bandera de xarm que no va a mover el b1
-
-        elif (self.trajectory_state == "MOVE_XARM"):
-
-            print("Moving xArm, current routine: ", self.xarm_routine)
-
-            self.linear_vel = self.stop_vel
-            self.angular_vel = self.stop_vel
-
-            if (self.done_moving_xarm == True):
-                self.done_moving_xarm = False
-                self.xarm_routine += 1
-                self.trajectory_state = ""
-
-        elif (self.trajectory_state == "RETURN_TO_ORIGIN"):
-
-            pass
-            #play rosbag
-            #self.done_trajectory = False
-            #self.trajectory_state = ""
 
         else:
-            print("ERROR - PLEASE RESTART THE SYSTEM")
-            self.linear_vel = self.stop_vel
-            self.angular_vel = self.stop_vel
+
+            if (self.trajectory_state == "OMRON_WAIT"):
+
+                print("Waiting for omron confirmation")
+
+                self.linear_vel = self.stop_vel
+                self.angular_vel = self.stop_vel
+
+                if (self.omron_confirmation == True):
+
+                    self.trajectory_state = ""
+
+            elif (self.trajectory_state == ''):
+
+                self.linear_vel = self.stop_vel
+                self.angular_vel = self.stop_vel
+
+                if (self.xarm_routine == 2):
+
+                    print("PIECE PLACED SUCCESFULLY")
+                    self.place_b1_pub.publish(True)
+
+                if (self.xarm_routine > 3):
+                    self.xarm_routine = 1
+                    #self.trajectory_state = "OMRON_WAIT"
+
+                if (self.done_trajectory == False):
+                    self.current_theta = self.theta
+                    self.trajectory_state = 'MOVE_X'
+                else:
+                    self.trajectory_state = "OMRON_WAIT"
+
+            elif (self.trajectory_state == 'MOVE_X'):
+
+                x_error = (self.x_goal - self.x)
+                print("Error X:", x_error)
+
+                angle_error = self.theta - self.current_theta
+
+                if (x_error <= self.threshold_distance):
+                    self.linear_vel = self.stop_vel
+                    self.current_theta = self.theta
+                    self.trajectory_state = 'TURN_TO_Y'
+                else:
+                    self.angular_vel = - self.kp_angular * angle_error
+                    self.linear_vel = self.forward_vel
+
+            elif (self.trajectory_state == 'TURN_TO_Y'):
+
+                orientation = self.y_goal - self.y
+                angle_change = self.theta - self.current_theta
+                angle = int(angle_change)
+                print("Angle error: ", angle)
+
+                if (orientation == 0):
+                    self.angular_vel = self.stop_vel
+                    self.trajectory_state = 'MOVE_Y'
+                elif (orientation > 0):
+                    self.angular_vel = self.turn_vel
+                    # Menos 5 para compensar que gira un poco mas
+                    if (angle_change >= self.turn_degrees):
+                        self.angular_vel = self.stop_vel
+                        self.current_theta = self.theta
+                        self.trajectory_state = 'MOVE_Y'
+                elif (orientation < 0):
+                    self.angular_vel = -self.turn_vel
+                    if (angle_change <= -self.turn_degrees):
+                        self.angular_vel = self.stop_vel
+                        self.current_theta = self.theta
+                        self.trajectory_state = 'MOVE_Y'
+
+            elif (self.trajectory_state == 'MOVE_Y'):
+
+                y_error = self.y_goal - self.y
+                print("Error Y:", y_error)
+
+                angle_error = self.theta - self.current_theta
+
+                if (y_error <= self.threshold_distance):
+                    self.linear_vel = self.stop_vel
+                    #self.current_theta = self.theta
+                    self.reset_origin_pub.publish(True)
+                    if (self.xarm_routine >= 3):
+                        self.trajectory_state = ""
+                    else:
+                        self.xarm_pub.publish(self.xarm_routine)
+                        #self.trajectory_state = ''
+                        self.trajectory_state = 'MOVE_XARM'
+                    #self.trajectory_state = 'TURN_TO_X'
+                else:
+                    self.linear_vel = self.forward_vel
+                    self.angular_vel = - self.kp_angular * angle_error
+
+            #elif (self.trajectory_state == 'TURN_TO_X'):
+
+                #orientation = self.y_goal - self.y
+                #angle_change = self.theta - self.current_theta
+                #angle = int(angle_change)
+                #print("Angle error: ", angle)
+
+                #if (orientation < 0):
+                    #self.angular_vel = self.turn_vel
+                    #if (angle_change >= self.turn_degrees):
+                        #self.angular_vel = self.stop_vel
+                        #self.reset_origin_pub.publish(True)
+                        #self.xarm_pub.publish(self.xarm_routine)
+                        #self.trajectory_state = ''
+                #if (orientation > 0):
+                    #self.angular_vel = -self.turn_vel
+                    #if (angle_change <= -self.turn_degrees):
+                        #self.angular_vel = self.stop_vel
+                        #self.reset_origin_pub.publish(True)
+                        #self.xarm_pub.publish(self.xarm_routine)
+                        #self.trajectory_state = ''
+
+                #orientation = self.y_goal - self.y
+                #if ((orientation) > 0):
+                #    self.angular_vel = -0.5
+                #elif (orientation < 0):
+                #    self.angular_vel = 0.5
+                #else:
+                #    self.trajectory_state = ''
+                #self.turn_counter += 1
+                #if self.turn_counter == 35:
+                #    self.angular_vel = 0.0
+                #    self.turn_counter = 0
+                #    self.trajectory_state = ''
+                #    # Bandera de xarm que no va a mover el b1
+
+            elif (self.trajectory_state == "MOVE_XARM"):
+
+                print("Moving xArm, current routine: ", self.xarm_routine)
+
+                self.linear_vel = self.stop_vel
+                self.angular_vel = self.stop_vel
+
+                if (self.done_moving_xarm == True):
+                    self.done_moving_xarm = False
+                    self.xarm_routine += 1
+                    self.trajectory_state = ""
+
+            elif (self.trajectory_state == "RETURN_TO_ORIGIN"):
+
+                pass
+                #play rosbag
+                #self.done_trajectory = False
+                #self.trajectory_state = ""
+
+            else:
+                print("ERROR - PLEASE RESTART THE SYSTEM")
+                self.linear_vel = self.stop_vel
+                self.angular_vel = self.stop_vel
 
         velocity = Twist()
         velocity.linear.x = self.linear_vel

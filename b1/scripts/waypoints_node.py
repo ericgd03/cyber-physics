@@ -19,11 +19,15 @@ class waypoints_node:
         self.waypoints = [
             # X: 1m = 0.3 -- Y: 1m = 0.1
             #1.02
-            Pose2D(1.0, 0.1, 0.0),
-            Pose2D(0.37, 0.0, 0.0),
-            Pose2D(0.0, 0.4, 0.0),
-            Pose2D(0.0, 0.20, 0.0),
-            Pose2D(0.01, 0.01, 0.0),
+            Pose2D(0.95, 0.06, 0.0),
+            Pose2D(0.35, 0.01, 0.0),
+            Pose2D(0.9, 0.01, 0.0),
+            Pose2D(0.4, 0.01, 0.0),
+            #Pose2D(0.01, 0.01, 0.0),
+
+            #Pose2D(1.0, 1.0, 0.0),
+            #Pose2D(1.0, 1.5, 0.0),
+            #Pose2D(0.0, 1.0, 0.0),
         ]
         self.current_waypoint_index = 0
         self.threshold_distance = 0.01
