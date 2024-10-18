@@ -5,6 +5,7 @@ from std_msgs.msg import Float32, Int16, Bool, String
 from geometry_msgs.msg import Twist, Pose2D
 from nav_msgs.msg import Odometry
 import math
+import time
 
 class controller_node:
 
@@ -49,9 +50,9 @@ class controller_node:
         self.angular_vel = 0.0
 
         self.stop_vel = 0.0
-        self.forward_vel = 0.15
-        self.turn_vel = 0.15
-        self.turn_degrees = 88
+        self.forward_vel = 0.1
+        self.turn_vel = 0.1
+        self.turn_degrees = 90
         self.threshold_distance = 0.01
 
         #self.kp_linear = 1
@@ -67,6 +68,7 @@ class controller_node:
         self.right_obstacle_detection = False
         self.left_obstacle_detection = False
         self.center_obstacle_detection = False
+        self.distance_stop = 15.0
 
         self.omron_confirmation = False
 
@@ -99,21 +101,21 @@ class controller_node:
 
     def right_ultrasonic_callback(self, msg):
 
-        if (msg.data <= 10.0):
+        if (msg.data <= 15.0):
             self.right_obstacle_detection = True
-        else: 
+        else:
             self.right_obstacle_detection = False
     
     def left_ultrasonic_callback(self, msg):
 
-        if (msg.data <= 10.0):
+        if (msg.data <= 15.0):
             self.left_obstacle_detection = True
         else: 
             self.left_obstacle_detection = False
     
     def center_ultrasonic_callback(self, msg):
 
-        if (msg.data <= 10.0):
+        if (msg.data <= 15.0):
             self.center_obstacle_detection = True
         else: 
             self.center_obstacle_detection = False
@@ -198,7 +200,7 @@ class controller_node:
                 angle = int(angle_change)
                 print("Angle error: ", angle)
 
-                if (orientation == 0):
+                if (self.y_goal == 0.0):
                     self.angular_vel = self.stop_vel
                     self.trajectory_state = 'MOVE_Y'
                 elif (orientation > 0):
