@@ -1,0 +1,4 @@
+int32 trajectory_number  # Input: 1, 2, or 3
+---
+bool success             # Output: Whether the service was successful
+string message           # Output: A message for feedback

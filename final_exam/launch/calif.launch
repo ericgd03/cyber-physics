@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<launch> 
+    <node pkg="turtlesim" type="turtlesim_node" name="turtle" output="screen"/>
+    <node pkg="final_exam" type="waypoints_node.py" name="waypoints" output="screen"/>
+    <node pkg="final_exam" type="trajectory_service.py" name="service" output="screen"/>    
+    <node pkg="final_exam" type="control_node.py" name="control" output="screen"/>
+    <node pkg="final_exam" type="path_publisher_node.py" name="path_draw" output="screen"/>
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find final_exam)/rviz/final_exam.rviz" output="screen"/>
+</launch>
