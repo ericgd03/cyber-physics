@@ -1,0 +1,150 @@
+<robot name="my_robot">
+
+    <link name="b1_structure">
+        <visual>
+            <origin xyz="0 0 0.1" rpy="1.57 0 1.57"/>
+            <geometry>
+                <mesh filename="package://my_robot_description/meshes/b1_structure.stl" scale="5 5 5"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+
+        <collision>
+            <origin xyz="0 0 0.1" rpy="1.57 0 1.57"/>
+            <geometry>
+                <mesh filename="package://my_robot_description/meshes/b1_structure.stl" scale="5 5 5"/>
+            </geometry>
+        </collision>
+
+        <inertial>
+            <mass value="10"/>
+            <origin xyz="0 0 0.1"/>
+            <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+        </inertial>
+    </link>
+
+    <link name="right_back_wheel">
+        <visual>
+            <origin xyz="-0.6 -0.7 0.1" rpy="0 0 -1.57"/>
+            <geometry>
+                <mesh filename="package://my_robot_description/meshes/b1_backWheel.stl" scale="5 5 5"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+
+        <collision>
+            <origin xyz="-0.6 -0.7 0.1" rpy="0 0 -1.57"/>
+            <geometry>
+                <mesh filename="package://my_robot_description/meshes/b1_backWheel.stl" scale="5 5 5"/>
+            </geometry>
+        </collision>
+
+        <inertial>
+            <mass value="10"/>
+            <origin xyz="0 0 0"/>
+            <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+        </inertial>
+    </link>
+
+    <joint name="structure_to_right_back_wheel" type="continuous">
+        <origin xyz="-0.6 -0.7 0.1" rpy="0 0 -1.57"/>
+        <parent link="b1_structure"/>
+        <child link="right_back_wheel"/>
+        <axis xyz="0 1 0"/>
+        <limit  effort="10" velocity="1"/>
+    </joint>
+
+    <link name="left_back_wheel">
+        <visual>
+            <origin xyz="-0.6 0.7 0.1" rpy="0 0 1.57"/>
+            <geometry>
+                <mesh filename="package://my_robot_description/meshes/b1_backWheel.stl" scale="5 5 5"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+
+        <collision>
+            <origin xyz="-0.6 0.7 0.1" rpy="0 0 1.57"/>
+            <geometry>
+                <mesh filename="package://my_robot_description/meshes/b1_backWheel.stl" scale="5 5 5"/>
+            </geometry>
+        </collision>
+
+        <inertial>
+            <mass value="10"/>
+            <origin xyz="0 0 0"/>
+            <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+        </inertial>
+    </link>
+
+    <joint name="structure_to_left_back_wheel" type="continuous">
+        <origin xyz="-0.6 0.7 0.1" rpy="0 0 1.57"/>
+        <parent link="b1_structure"/>
+        <child link="left_back_wheel"/>
+        <axis xyz="0 1 0"/>
+        <limit  effort="10" velocity="1"/>
+    </joint>
+
+    <link name="right_front_wheel">
+        <visual>
+            <origin xyz="0.5 -0.5 0" rpy="0 0 -1.57"/>
+            <geometry>
+                <mesh filename="package://my_robot_description/meshes/b1_frontWheel.stl" scale="0.01 0.01 0.01"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+
+        <collision>
+            <origin xyz="0.5 -0.5 0" rpy="0 0 -1.57"/>
+            <geometry>
+                <mesh filename="package://my_robot_description/meshes/b1_frontWheel.stl" scale="0.01 0.01 0.01"/>
+            </geometry>
+        </collision>
+
+        <inertial>
+            <mass value="10"/>
+            <origin xyz="0 0 0"/>
+            <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+        </inertial>
+    </link>
+
+    <joint name="structure_to_right_front_wheel" type="continuous">
+        <origin xyz="0.5 -0.5 0" rpy="0 0 -1.57"/>
+        <parent link="b1_structure"/>
+        <child link="right_front_wheel"/>
+        <axis xyz="0 1 0"/>
+        <limit  effort="10" velocity="1"/>
+    </joint>
+
+    <link name="left_front_wheel">
+        <visual>
+            <origin xyz="0.5 0.5 0" rpy="0 0 1.57"/>
+            <geometry>
+                <mesh filename="package://my_robot_description/meshes/b1_frontWheel.stl" scale="0.01 0.01 0.01"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+
+        <collision>
+            <origin xyz="0.6 0.6 0" rpy="0 0 1.57"/>
+            <geometry>
+                <mesh filename="package://my_robot_description/meshes/b1_frontWheel.stl" scale="0.01 0.01 0.01"/>
+            </geometry>
+        </collision>
+
+        <inertial>
+            <mass value="10"/>
+            <origin xyz="0 0 0"/>
+            <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+        </inertial>
+    </link>
+
+    <joint name="structure_to_left_front_wheel" type="continuous">
+        <origin xyz="0.5 0.5 0" rpy="0 0 1.57"/>
+        <parent link="b1_structure"/>
+        <child link="left_front_wheel"/>
+        <axis xyz="0 1 0"/>
+        <limit  effort="10" velocity="1"/>
+    </joint>
+
+</robot>

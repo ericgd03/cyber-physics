@@ -1,0 +1,10 @@
+<launch>
+    <param name="robot_description" command="cat /home/student/catkin_ws/src/my_robot_description/urdf/my_robot.urdf"/>
+    <node pkg="robot_state_publisher" name="robot_state_publisher" type="robot_state_publisher"/>  
+    <node pkg="tf2_ros" type="static_transform_publisher" name="map_to_b1_structure" args="0 0 0 0 0 0 1 map b1_structure"/>
+    <node pkg="tf2_ros" type="static_transform_publisher" name="b1_structure_to_rbw" args="0 0 0 0 0 0 1 b1_structure right_back_wheel" />
+    <node pkg="tf2_ros" type="static_transform_publisher" name="b1_structure_to_lbw" args="0 0 0 0 0 0 1 b1_structure left_back_wheel" />
+    <node pkg="tf2_ros" type="static_transform_publisher" name="b1_structure_to_rfw" args="0 0 0 0 0 0 1 b1_structure right_front_wheel" />
+    <node pkg="tf2_ros" type="static_transform_publisher" name="b1_structure_to_lfw" args="0 0 0 0 0 0 1 b1_structure left_front_wheel" />
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find my_robot_description)/rviz/my_robot.rviz"/>
+</launch>
